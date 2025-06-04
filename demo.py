@@ -64,7 +64,6 @@ class BLC_Demo:
             print("  python main.py")
             print("\nThen run this demo script again.")
             return
-        
         print("API server is running and model is loaded!")
         
         # Show initial instructions
@@ -101,7 +100,7 @@ class BLC_Demo:
                 self.display_result(result, text)
                 
                 # Ask if user wants to continue
-                print("\nPress Enter to continue (or type 'exit' to quit)")
+                print("\nPress Enter to continue or type 'exit' to quit:")
                 continue_input = input().strip().lower()
                 if continue_input == 'exit':
                     print("Thanks for using the Binary Language Classifier!")
