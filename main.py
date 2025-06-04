@@ -242,11 +242,7 @@ class BLC:
 
         return {
             'prediction': prediction,
-            'confidence': float(confidence),
-            'probabilities': {
-                'non_italian': float(1 - probability_italian),
-                'italian': float(probability_italian)
-            }
+            'confidence': float(confidence)
         }
 
     def save_model(self, model_path_prefix='pytorch_model'):
@@ -337,8 +333,7 @@ def predict_api(): # Rinominato per evitare conflitto con il metodo predict dell
             'text': text,
             'prediction': result['prediction'],
             'is_italian': bool(result['prediction']),
-            'confidence': result['confidence'],
-            'probabilities': result['probabilities']
+            'confidence': result['confidence']
         })
         
     except Exception as e:
@@ -365,8 +360,7 @@ def home():
             'response': {
                 'prediction': '1 for Italian, 0 for non-Italian',
                 'is_italian': 'boolean',
-                'confidence': 'prediction confidence',
-                'probabilities': 'class probabilities'
+                'confidence': 'prediction confidence'
             }
         }
     })

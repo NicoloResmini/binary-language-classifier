@@ -44,12 +44,6 @@ class BLC_Demo:
         print(f"Language: {'ITALIAN' if result['is_italian'] else 'NON-ITALIAN'}")
         print(f"Confidence: {result['confidence']:.1%}")
         print(f"Raw prediction: {result['prediction']} (1=Italian, 0=Non-Italian)")
-        
-        # Show probability breakdown
-        probs = result['probabilities']
-        print(f"\nProbability breakdown:")
-        print(f"  Italian:     {probs['italian']:.1%}")
-        print(f"  Non-Italian: {probs['non_italian']:.1%}")
     
     
     def run_demo(self):
