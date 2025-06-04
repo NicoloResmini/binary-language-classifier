@@ -123,7 +123,7 @@ class ItalianLanguageClassifier:
             }
         }
     
-    def save_model(self, model_path='italian_classifier.pkl'):
+    def save_model(self, model_path='model.pkl'):
         """Save trained model and vectorizer"""
         if not self.is_trained:
             raise ValueError("Model must be trained first!")
@@ -138,7 +138,7 @@ class ItalianLanguageClassifier:
             pickle.dump(model_data, f)
         print(f"Model saved to {model_path}")
     
-    def load_model(self, model_path='italian_classifier.pkl'):
+    def load_model(self, model_path='model.pkl'):
         """Load trained model and vectorizer"""
         if not os.path.exists(model_path):
             raise FileNotFoundError(f"Model file {model_path} not found!")
@@ -230,7 +230,7 @@ def main():
     
     # Configuration
     CSV_PATH = 'dataset.csv'  # Path to your dataset
-    MODEL_PATH = 'italian_classifier.pkl'
+    MODEL_PATH = 'model.pkl'
     
     # Try to load existing model, otherwise train new one
     try:
