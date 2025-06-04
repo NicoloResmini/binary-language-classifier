@@ -4,7 +4,7 @@
 
 BLC (Binary Language Classifier) is a project to detect whether an input text is in the Italian language or not. It uses a machine learning model trained on a public dataset from [Kaggle](https://www.kaggle.com/datasets/basilb2s/language-detection) to perform binary classification. The solution exposes a local REST API endpoint for inference, allowing you to send a text and receive a prediction (Italian or non-Italian).
 
-## Repository Structure
+## Repository Structure (TODO: update)
 
 - `dataset.csv` : Dataset for training (downloaded from Kaggle, see below).
 - `demo.py` : Interactive demo client for testing the API from the terminal.
