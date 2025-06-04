@@ -1,20 +1,5 @@
-#!/usr/bin/env python3
-"""
-Interactive Demo Script for Italian Language Classifier
-iGenius Take Home Assessment
-
-This script provides an interactive command-line interface to test
-the Italian language classifier API.
-
-Usage:
-1. Start the API server: python main.py
-2. In another terminal, run: python demo.py
-"""
-
 import requests
-import json
-import time
-import sys
+
 
 class ItalianClassifierDemo:
     def __init__(self, api_url="http://localhost:5000"):

@@ -1,16 +1,13 @@
-# Language Classifier - Binary Italian Detection
-# iGenius Take Home Assessment
-
 import pandas as pd
-import numpy as np
 import re
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.metrics import accuracy_score, classification_report
 from flask import Flask, request, jsonify
 import pickle
 import os
+
 
 # ============================================
 # 1. DATA PREPROCESSING AND MODEL TRAINING
