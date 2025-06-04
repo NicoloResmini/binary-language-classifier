@@ -18,7 +18,7 @@ BLC (Binary Language Classifier) is a project to detect whether an input text is
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/NicoloResmini/BLC
+git clone https://github.com/NicoloResmini/BLC.git
 cd BLC
 ```
 
