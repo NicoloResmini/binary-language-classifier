@@ -13,7 +13,7 @@ import os
 # 1. DATA PREPROCESSING AND MODEL TRAINING
 # ============================================
 
-class ItalianLanguageClassifier:
+class BLC:
     def __init__(self):
         self.vectorizer = TfidfVectorizer(
             max_features=10000,
@@ -149,14 +149,13 @@ class ItalianLanguageClassifier:
         self.vectorizer = model_data['vectorizer']
         self.model = model_data['model']
         self.is_trained = model_data['is_trained']
-        print(f"Model loaded from {model_path}")
 
 # ============================================
 # 2. FLASK API SERVER
 # ============================================
 
 # Global classifier instance
-classifier = ItalianLanguageClassifier()
+classifier = BLC()
 
 app = Flask(__name__)
 
@@ -194,6 +193,7 @@ def predict():
         return jsonify({
             'error': f'Prediction error: {str(e)}'
         }), 500
+    
 
 @app.route('/health', methods=['GET'])
 def health():
@@ -203,15 +203,16 @@ def health():
         'model_trained': classifier.is_trained
     })
 
+
 @app.route('/', methods=['GET'])
 def home():
     """Home endpoint with usage information"""
     return jsonify({
-        'message': 'Italian Language Classifier API',
+        'message': 'Binary Language Classifier API',
         'usage': {
             'endpoint': '/predict',
             'method': 'POST',
-            'body': {'Text': 'Your text here'},
+            'body': {'text': 'Your text here'},
             'response': {
                 'prediction': '1 for Italian, 0 for non-Italian',
                 'is_italian': 'boolean',
@@ -221,6 +222,7 @@ def home():
         }
     })
 
+
 # ============================================
 # 3. MAIN EXECUTION
 # ============================================
@@ -229,12 +231,12 @@ def main():
     """Main function to train model and start API server"""
     
     # Configuration
-    CSV_PATH = 'dataset.csv'  # Path to your dataset
+    DATASET_PATH = 'dataset.csv'
     MODEL_PATH = 'model.pkl'
     
     # Try to load existing model, otherwise train new one
     try:
-        print("Attempting to load existing model...")
+        print("\nAttempting to load existing model...")
         classifier.load_model(MODEL_PATH)
         print("Model loaded successfully!")
         
@@ -242,14 +244,14 @@ def main():
         print("No existing model found. Training new model...")
         
         # Check if dataset exists
-        if not os.path.exists(CSV_PATH):
-            print(f"Error: Dataset file '{CSV_PATH}' not found!")
-            print("Please download the dataset from Kaggle and place it in the same directory.")
+        if not os.path.exists(DATASET_PATH):
+            print(f"Error: Dataset file '{DATASET_PATH}' not found!")
+            print("Please download the dataset from Kaggle and place it as 'dataset.csv' in the same directory.")
             return
         
         # Train model
         try:
-            accuracy = classifier.train(CSV_PATH)
+            accuracy = classifier.train(DATASET_PATH)
             print(f"Model trained with accuracy: {accuracy:.4f}")
             
             # Save model
@@ -260,39 +262,24 @@ def main():
             return
     
     # Test the classifier
-    print("\n" + "="*50)
-    print("TESTING THE CLASSIFIER")
-    print("="*50)
+    print("\nTESTING THE CLASSIFIER:\n")
     
     test_sentences = [
         "Questa è una frase in italiano!",
-        "This is an English sentence.",
-        "Ciao, come stai oggi?",
-        "Hello, how are you today?",
-        "Mi piace molto la pizza italiana.",
-        "I love Italian pizza very much.",
-        "Buongiorno, vorrei un caffè per favore.",
-        "Good morning, I would like a coffee please."
+        "This is an English sentence."
     ]
     
     for text in test_sentences:
         result = classifier.predict(text)
         print(f"Text: '{text}'")
         print(f"Prediction: {result['prediction']} ({'Italian' if result['prediction'] else 'Non-Italian'})")
-        print(f"Confidence: {result['confidence']:.4f}")
-        print("-" * 50)
+        print(f"Confidence: {result['confidence']:.4f}\n")
     
     # Start Flask server
-    print("\n" + "="*50)
-    print("STARTING API SERVER")
-    print("="*50)
-    print("Server will be available at: http://localhost:5000")
+    print("\nSTARTING API SERVER...\n")
+    print("Server is running at http://localhost:5000")
     print("Prediction endpoint: http://localhost:5000/predict")
-    print("Health check: http://localhost:5000/health")
-    print("\nExample usage:")
-    print("curl -X POST http://localhost:5000/predict \\")
-    print("     -H 'Content-Type: application/json' \\")
-    print("     -d '{\"Text\": \"questa è una frase in italiano!\"}'")
+    print("Health check endpoint: http://localhost:5000/health")
     print("\nPress Ctrl+C to stop the server")
     
     # Start server
@@ -300,67 +287,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-# ============================================
-# 4. ALTERNATIVE SIMPLE IMPLEMENTATION
-# ============================================
-
-"""
-ALTERNATIVE IMPLEMENTATION WITHOUT SKLEARN (simpler approach):
-This uses basic character n-gram analysis and frequency counting.
-Less accurate but demonstrates understanding of the underlying concepts.
-
-class SimpleItalianClassifier:
-    def __init__(self):
-        self.italian_patterns = {}
-        self.non_italian_patterns = {}
-        self.is_trained = False
-    
-    def extract_features(self, text):
-        # Convert to lowercase and extract character n-grams
-        text = text.lower()
-        features = {}
-        
-        # Character trigrams
-        for i in range(len(text) - 2):
-            trigram = text[i:i+3]
-            features[trigram] = features.get(trigram, 0) + 1
-        
-        # Common Italian patterns
-        italian_indicators = ['gli', 'lla', 'tto', 'nno', 'zio', 'chi', 'ghi']
-        for indicator in italian_indicators:
-            features[f'has_{indicator}'] = indicator in text
-        
-        return features
-    
-    def train_simple(self, texts, labels):
-        italian_texts = [t for t, l in zip(texts, labels) if l == 1]
-        non_italian_texts = [t for t, l in zip(texts, labels) if l == 0]
-        
-        # Build pattern dictionaries
-        for text in italian_texts:
-            features = self.extract_features(text)
-            for feature, count in features.items():
-                self.italian_patterns[feature] = self.italian_patterns.get(feature, 0) + count
-        
-        for text in non_italian_texts:
-            features = self.extract_features(text)
-            for feature, count in features.items():
-                self.non_italian_patterns[feature] = self.non_italian_patterns.get(feature, 0) + count
-        
-        self.is_trained = True
-    
-    def predict_simple(self, text):
-        if not self.is_trained:
-            return 0
-        
-        features = self.extract_features(text)
-        italian_score = 0
-        non_italian_score = 0
-        
-        for feature, count in features.items():
-            italian_score += self.italian_patterns.get(feature, 0) * count
-            non_italian_score += self.non_italian_patterns.get(feature, 0) * count
-        
-        return 1 if italian_score > non_italian_score else 0
-"""
