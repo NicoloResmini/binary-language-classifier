@@ -1,16 +1,23 @@
-# BLC
+# BLC (Binary Language Classifier)
 
 ## Introduction
 
-BLC (Binary Language Classifier) is a project to detect whether an input text is in the Italian language or not. It uses a machine learning model trained on a public dataset from [Kaggle](https://www.kaggle.com/datasets/basilb2s/language-detection) to perform binary classification. The solution exposes a local REST API endpoint for inference, allowing you to send a text and receive a prediction (Italian or non-Italian).
+BLC (Binary Language Classifier) is a project to detect whether an input text is in the Italian language or not. It uses a deep learning model trained on a public dataset from [Kaggle](https://www.kaggle.com/datasets/basilb2s/language-detection) to perform binary classification. The solution exposes a local REST API endpoint for inference, allowing the user to send a text and receive a prediction (Italian or non-Italian).
 
-## Repository Structure (TODO: update)
+## Repository Structure
 
-- `client.py` : Interactive demo client for testing the API from the terminal.
-- `dataset.csv` : Dataset for training (downloaded from Kaggle, see below).
-- `model.pkl` : Saved trained model (auto-generated after training).
-- `requirements.txt` : Python dependencies.
-- `server.py` : Trains the model (if needed) and starts the Flask API server.
+- `dataset/` : Contains the dataset used for training.
+    - `dataset_info.md` : Information about the dataset.
+    - `language_detection.csv` : Dataset downloaded from Kaggle (see below).
+- `model/` : Contains the trained model and related files.
+    - `blc_model_params.json` : 
+    - `blc_model_state.pth` : 
+    - `blc_model_vocab.json` :
+    - `model_info.md` : Information about the model. (TODO ------)
+- `src/` : Contains the source code for the project.
+    - `client.py` : Interactive demo client for testing the API from the terminal.
+    - `server.py` : Trains the model (if needed) and starts the Flask API server.
+- `requirements.txt` : Python dependencies required to run the project.
 
 
 ## Usage
@@ -33,7 +40,7 @@ pip install -r requirements.txt
 ### 3. Run the server
 
 ```bash
-python server.py
+python src/server.py
 ```
 
 This will train the model (if not already trained) and start the API server at `http://localhost:5000`.
@@ -43,7 +50,7 @@ This will train the model (if not already trained) and start the API server at `
 In a separate terminal:
 
 ```bash
-python client.py
+python src/client.py
 ```
 
 This will start an interactive client that allows you to enter text and get predictions from the API.
