@@ -35,3 +35,5 @@ This is a language detection dataset containing text samples from 17 different l
 
 - **Italian**: 698 samples (6.75%)
 - **Non-Italian**: 9,639 samples (93.25%)
+
+Since the goal of the BLC project is to perform binary classification to detect whether a text is in Italian or not, the dataset is heavily imbalanced. Therefore, under-sampling of the non-Italian samples is performed to balance the dataset to approximately 1:2 ratio.

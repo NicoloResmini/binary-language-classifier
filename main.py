@@ -143,15 +143,11 @@ class BLC:
         italian_samples = df[df['is_italian'] == 1]
         non_italian_samples = df[df['is_italian'] == 0]
 
-        min_samples = min(len(italian_samples), len(non_italian_samples))
-        if min_samples == 0: # Gestione del caso in cui una classe non abbia campioni
-            print("Warning: One class has zero samples after filtering. Using available data.")
-            balanced_df = df if len(italian_samples) > 0 or len(non_italian_samples) > 0 else pd.DataFrame(columns=df.columns)
-        else:
-            balanced_df = pd.concat([
-                italian_samples.sample(n=min_samples, random_state=42),
-                non_italian_samples.sample(n=min_samples, random_state=42)
-            ])
+        min_samples = len(italian_samples)
+        balanced_df = pd.concat([
+            italian_samples.sample(n=min_samples, random_state=42),
+            non_italian_samples.sample(n=min_samples*2, random_state=42)
+        ])
         
         if balanced_df.empty:
             raise ValueError("Dataset is empty after balancing. Check data and balancing logic.")
