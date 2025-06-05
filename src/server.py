@@ -120,6 +120,7 @@ class BLC:
         text = re.sub(r'\s+', ' ', text)
         # Remove any spaces at the beginning and end of the text
         text = text.strip()
+        
         return text
 
 
