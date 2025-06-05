@@ -9,15 +9,15 @@ BLC (Binary Language Classifier) is a project to detect whether an input text is
 - `dataset/` : Contains the dataset used for training.
     - `dataset_info.md` : Information about the dataset.
     - `language_detection.csv` : Dataset downloaded from Kaggle (see below).
-- `model/` : Contains the trained model and related files.
-    - `blc_model_params.json` : Hyper-parameters to use for text vectorization.
-    - `blc_model_state.pth` : Parameters of the trained classifier.
-    - `blc_model_vocab.json` : Vocabulary obtained for text vectorization.
+- `model/` : Contains the trained model and the vocabulary for text vectorization.
+    - `blc_classifier_weights.pth` : Weights of the trained classifier.
+    - `blc_config.json` : Some config parameters for the model and for the vocabulary.
+    - `blc_vocab.json` : Vocabulary data for text vectorization.
     - `model_info.md` : Information about the model. (TODO ------)
-- `src/` : Contains the source code for the project.
+- `src/` : Contains the source code for the task.
     - `client.py` : Interactive demo client for testing the API from the terminal.
     - `server.py` : Trains the model (if needed) and starts the Flask API server.
-- `requirements.txt` : Python dependencies required to run the project.
+- `requirements.txt` : Contains the Python dependencies required for the task.
 
 
 ## Usage
