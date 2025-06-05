@@ -1,17 +1,17 @@
 import pandas as pd
 import re
 import os
-import json # Aggiunto per gestione vocabolario
-from collections import Counter # Per costruire il vocabolario
+import json
+from collections import Counter
+import string
 
-# PyTorch imports
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 
-from sklearn.model_selection import train_test_split # Utilità permessa
-from sklearn.metrics import accuracy_score, classification_report # Utilità permesse
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, classification_report
 
 from flask import Flask, request, jsonify
 
@@ -76,6 +76,7 @@ class BLC:
 
         self.is_trained = False
 
+
     def _generate_char_ngrams(self, text):
         """Genera N-grammi di caratteri da un testo."""
         ngrams = set()
@@ -85,6 +86,7 @@ class BLC:
             for i in range(len(text) - n + 1):
                 ngrams.add(text[i:i+n])
         return list(ngrams)
+
 
     def _build_vocabulary(self, texts):
         """Costruisce il vocabolario dagli N-grammi dei testi di training."""
@@ -99,6 +101,7 @@ class BLC:
         self.idx_to_ngram = {i: ngram for ngram, i in self.vocab.items()}
         print(f"Vocabulary size: {len(self.vocab)}")
 
+
     def _vectorize_text(self, text):
         """Converte un testo in un vettore binario basato sul vocabolario."""
         ngrams = self._generate_char_ngrams(text)
@@ -107,6 +110,7 @@ class BLC:
             if ngram in self.vocab:
                 vector[self.vocab[ngram]] = 1 # Presenza binaria
         return vector.unsqueeze(0) # Aggiunge dimensione batch (1, vocab_size)
+
 
     def _vectorize_text_for_dataset(self, text):
         """Versione per DataLoader che non aggiunge dimensione batch."""
@@ -120,12 +124,18 @@ class BLC:
 
     def preprocess_text(self, text):
         """Pulisce e pre-processa il testo."""
+        # Trasforma in minuscolo
         text = text.lower()
-        text = re.sub(r'\s+', ' ', text) # Rimuove spazi extra
-        # Rimuove caratteri speciali ma mantiene quelli accentati e alfanumerici.
-        # Gli N-grammi di caratteri sono abbastanza robusti, quindi la pulizia può essere meno aggressiva.
-        text = re.sub(r'[^\w\sàáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿ]', '', text) # Manteniamo solo alfanumerici e accenti base
-        return text.strip()
+        # Rimuovi punteggiatura standard ma mantieni caratteri Unicode (es. lettere accentate)
+        text = re.sub(r'[{}]'.format(re.escape(string.punctuation)), ' ', text)
+        # Rimuovi numeri
+        text = re.sub(r'\d+', '', text)
+        # Trasforma spazi multipli consecutivi in un singolo spazio
+        text = re.sub(r'\s+', ' ', text)
+        # Rimuovi eventuali spazi all'inizio e alla fine del testo
+        text = text.strip()
+        return text
+
 
     def load_and_prepare_data(self, csv_path):
         """Carica il dataset e prepara i dati per la classificazione binaria."""
@@ -143,10 +153,11 @@ class BLC:
         italian_samples = df[df['is_italian'] == 1]
         non_italian_samples = df[df['is_italian'] == 0]
 
+        # Under-sampling the non_italian samples to balance the dataset (since original ratio is 1:14)
         min_samples = len(italian_samples)
         balanced_df = pd.concat([
             italian_samples.sample(n=min_samples, random_state=42),
-            non_italian_samples.sample(n=min_samples*2, random_state=42)
+            non_italian_samples.sample(n=min_samples*2, random_state=42) # ratio 1:2 
         ])
         
         if balanced_df.empty:
@@ -156,6 +167,7 @@ class BLC:
         print(f"Class distribution: {balanced_df['is_italian'].value_counts()}")
 
         return balanced_df
+
 
     def train(self, csv_path):
         """Addestra il classificatore PyTorch."""
@@ -221,6 +233,7 @@ class BLC:
         self.is_trained = True
         return accuracy
 
+
     def predict(self, text):
         """Predice se il testo è Italiano (1) o no (0)."""
         if not self.is_trained or not self.model:
@@ -240,6 +253,7 @@ class BLC:
             'prediction': prediction,
             'confidence': float(confidence)
         }
+
 
     def save_model(self, model_path_prefix='pytorch_model'):
         """Salva il modello PyTorch addestrato e il vocabolario."""
@@ -267,6 +281,7 @@ class BLC:
         print(f"Model state saved to {model_state_path}")
         print(f"Vocabulary saved to {vocab_path}")
         print(f"Parameters saved to {params_path}")
+
 
     def load_model(self, model_path_prefix='pytorch_model'):
         """Carica un modello PyTorch e il vocabolario."""
