@@ -15,16 +15,13 @@ from sklearn.metrics import accuracy_score, classification_report
 
 from flask import Flask, request, jsonify
 
-
-# For reproducibility
 torch.manual_seed(42)
-if torch.cuda.is_available():
-    torch.cuda.manual_seed_all(42)
 
 
 # ============================================
 # 0. PYTORCH MLP MODEL DEFINITION
 # ============================================
+
 class SimpleMLP(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
         super(SimpleMLP, self).__init__()
@@ -55,6 +52,7 @@ class TextDataset(Dataset):
         label = torch.FloatTensor([self.labels[idx]])
         return text_vector, label
 
+
 # ============================================
 # 1. BLC CLASS
 # ============================================
@@ -72,9 +70,8 @@ class BLC:
         self.hidden_size = hidden_size
         self.learning_rate = learning_rate
         self.epochs = epochs
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = "cpu"
         print(f"Using device: {self.device}")
-
         self.is_trained = False
 
 
@@ -255,19 +252,19 @@ class BLC:
         }
 
 
-    def save_model(self, model_path_prefix='../model/blc_model'):
+    def save_model(self, model_path_prefix='../model/blc'):
         """Saves the trained PyTorch model and vocabulary."""
         if not self.is_trained:
             raise ValueError("Model must be trained first!")
 
-        model_state_path = f"{model_path_prefix}_state.pth"
+        classifier_weights_path = f"{model_path_prefix}_classifier_weights.pth"
         vocab_path = f"{model_path_prefix}_vocab.json"
-        params_path = f"{model_path_prefix}_params.json"
+        config_path = f"{model_path_prefix}_config.json"
 
         # Ensure the directory exists, as torch.save does not create it automatically
-        os.makedirs(os.path.dirname(model_state_path), exist_ok=True)
+        os.makedirs(os.path.dirname(classifier_weights_path), exist_ok=True)
 
-        torch.save(self.model.state_dict(), model_state_path)
+        torch.save(self.model.state_dict(), classifier_weights_path)
 
         with open(vocab_path, 'w', encoding='utf-8') as f:
             json.dump(self.vocab, f, ensure_ascii=False, indent=4)
@@ -278,24 +275,24 @@ class BLC:
             'hidden_size': self.hidden_size,
             'input_size': len(self.vocab) 
         }
-        with open(params_path, 'w', encoding='utf-8') as f:
+        with open(config_path, 'w', encoding='utf-8') as f:
             json.dump(model_params, f, indent=4)
 
-        print(f"Model state saved to {model_state_path}")
+        print(f"Model weights state saved to {classifier_weights_path}")
         print(f"Vocabulary saved to {vocab_path}")
-        print(f"Parameters saved to {params_path}")
+        print(f"Config Parameters saved to {config_path}")
 
 
-    def load_model(self, model_path_prefix='../model/blc_model'):
+    def load_model(self, model_path_prefix='../model/blc'):
         """Loads a PyTorch model and vocabulary."""
-        model_state_path = f"{model_path_prefix}_state.pth"
+        classifier_weights_path = f"{model_path_prefix}_classifier_weights.pth"
         vocab_path = f"{model_path_prefix}_vocab.json"
-        params_path = f"{model_path_prefix}_params.json"
+        config_path = f"{model_path_prefix}_config.json"
 
-        if not (os.path.exists(model_state_path) and os.path.exists(vocab_path) and os.path.exists(params_path)):
-            raise FileNotFoundError(f"Model files not found with prefix {model_path_prefix}. Ensure .pth, _vocab.json, and _params.json exist.")
+        if not (os.path.exists(classifier_weights_path) and os.path.exists(vocab_path) and os.path.exists(config_path)):
+            raise FileNotFoundError(f"Model files not found with prefix {model_path_prefix}.")
 
-        with open(params_path, 'r', encoding='utf-8') as f:
+        with open(config_path, 'r', encoding='utf-8') as f:
             model_params = json.load(f)
         
         self.ngram_range = tuple(model_params['ngram_range'])
@@ -315,7 +312,7 @@ class BLC:
              raise ValueError("Loaded vocabulary is empty.")
 
         self.model = SimpleMLP(input_size, self.hidden_size, 1).to(self.device)
-        self.model.load_state_dict(torch.load(model_state_path, map_location=self.device))
+        self.model.load_state_dict(torch.load(classifier_weights_path, map_location=self.device))
         self.model.eval()
         self.is_trained = True
 
@@ -388,7 +385,7 @@ def main():
     """Main function to train model and start API server"""
     
     DATASET_PATH = '../dataset/language_detection.csv' 
-    MODEL_PREFIX = '../model/blc_model'
+    MODEL_PREFIX = '../model/blc'
     
     try:
         print("\nAttempting to load existing PyTorch model...")
