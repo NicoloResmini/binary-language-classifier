@@ -423,10 +423,7 @@ def main():
     print("\nTESTING THE CLASSIFIER (after load/train):\n")
     test_sentences = [
         "Questa è una frase in italiano!",
-        "This is an English sentence.",
-        "Ceci est une phrase en français.",
-        "Das ist ein deutscher Satz.",
-        "Esta es una frase en español."
+        "This is an English sentence."
     ]
     
     for text in test_sentences:
@@ -434,7 +431,7 @@ def main():
             result = classifier.predict(text)
             print(f"Text: '{text}'")
             print(f"Prediction: {result['prediction']} ({'Italian' if result['prediction'] else 'Non-Italian'})")
-            print(f"Confidence: {result['confidence']:.4f}\n")
+            print(f"Confidence: {result['confidence'] * 100:.2f}%\n")
         except Exception as e:
             print(f"Error predicting for text '{text}': {e}")
 
@@ -444,7 +441,7 @@ def main():
     print("Health check endpoint: http://localhost:5000/health (GET)")
     print("\nPress Ctrl+C to stop the server")
     
-    app.run(host='0.0.0.0', port=5000, debug=False) # debug=False per produzione/test finale
+    app.run(host='0.0.0.0', port=5000, debug=False)
 
 if __name__ == '__main__':
     main()
