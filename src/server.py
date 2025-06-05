@@ -105,16 +105,6 @@ class BLC:
         for ngram in ngrams:
             if ngram in self.vocab:
                 vector[self.vocab[ngram]] = 1
-        return vector.unsqueeze(0) # Adds batch dimension (1, vocab_size)
-
-
-    def _vectorize_text_for_dataset(self, text):
-        """Version for DataLoader that does not add batch dimension."""
-        ngrams = self._generate_char_ngrams(text)
-        vector = torch.zeros(len(self.vocab), dtype=torch.float32)
-        for ngram in ngrams:
-            if ngram in self.vocab:
-                vector[self.vocab[ngram]] = 1
         return vector
 
 
@@ -188,7 +178,7 @@ class BLC:
         optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
 
         # DataLoader
-        train_dataset = TextDataset(X_train_texts, y_train, self._vectorize_text_for_dataset)
+        train_dataset = TextDataset(X_train_texts, y_train, self._vectorize_text)
         train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
 
         # Training loop
@@ -215,7 +205,7 @@ class BLC:
         all_true = []
         with torch.no_grad(): 
             for text, label in zip(X_test_texts, y_test):
-                text_vector = self._vectorize_text(text).to(self.device) # _vectorize_text adds the batch dim
+                text_vector = self._vectorize_text(text).unsqueeze(0).to(self.device) # it adds the batch dimension -> (1, vocab_size)
                 output = self.model(text_vector)
                 predicted_class = (output.item() > 0.5)
                 all_preds.append(int(predicted_class))
@@ -238,7 +228,7 @@ class BLC:
 
         self.model.eval()
         clean_text = self.preprocess_text(text)
-        text_vector = self._vectorize_text(clean_text).to(self.device)
+        text_vector = self._vectorize_text(clean_text).unsqueeze(0).to(self.device)
 
         with torch.no_grad():
             probability_italian = self.model(text_vector).item()
