@@ -255,7 +255,7 @@ class BLC:
         }
 
 
-    def save_model(self, model_path_prefix='pytorch_model'):
+    def save_model(self, model_path_prefix='../model/blc_model'):
         """Salva il modello PyTorch addestrato e il vocabolario."""
         if not self.is_trained:
             raise ValueError("Model must be trained first!")
@@ -263,6 +263,9 @@ class BLC:
         model_state_path = f"{model_path_prefix}_state.pth"
         vocab_path = f"{model_path_prefix}_vocab.json"
         params_path = f"{model_path_prefix}_params.json"
+
+        # Assicurati che la cartella esista, dato che torch.save non la crea in automatico
+        os.makedirs(os.path.dirname(model_state_path), exist_ok=True)
 
         torch.save(self.model.state_dict(), model_state_path)
 
@@ -283,7 +286,7 @@ class BLC:
         print(f"Parameters saved to {params_path}")
 
 
-    def load_model(self, model_path_prefix='pytorch_model'):
+    def load_model(self, model_path_prefix='../model/blc_model'):
         """Carica un modello PyTorch e il vocabolario."""
         model_state_path = f"{model_path_prefix}_state.pth"
         vocab_path = f"{model_path_prefix}_vocab.json"
@@ -315,7 +318,6 @@ class BLC:
         self.model.load_state_dict(torch.load(model_state_path, map_location=self.device))
         self.model.eval() # Metti in modalità valutazione dopo il caricamento
         self.is_trained = True
-        print(f"Model loaded from prefix {model_path_prefix}")
 
 
 # ============================================
@@ -377,14 +379,14 @@ def home():
     })
 
 # ============================================
-# 3. MAIN EXECUTION (Simile alla tua versione)
+# 3. MAIN EXECUTION
 # ============================================
 
 def main():
     """Main function to train model and start API server"""
     
-    DATASET_PATH = 'dataset.csv' # Assicurati che questo file esista
-    MODEL_PREFIX = 'pytorch_blc_model' # Prefisso per i file del modello PyTorch
+    DATASET_PATH = '../dataset/language_detection.csv' 
+    MODEL_PREFIX = '../model/blc_model' # Prefisso per i file del modello PyTorch
     
     try:
         print("\nAttempting to load existing PyTorch model...")
@@ -396,7 +398,7 @@ def main():
         
         if not os.path.exists(DATASET_PATH):
             print(f"Error: Dataset file '{DATASET_PATH}' not found!")
-            print("Please download the dataset e.g. from https://www.kaggle.com/datasets/basilb2s/language-detection and place it as 'dataset.csv'.")
+            print("Please download the dataset e.g. from https://www.kaggle.com/datasets/basilb2s/language-detection and save it as 'language_detection.csv' in the 'dataset' directory.")
             return
         
         try:

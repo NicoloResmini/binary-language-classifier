@@ -6,12 +6,12 @@ BLC (Binary Language Classifier) is a project to detect whether an input text is
 
 ## Repository Structure (TODO: update)
 
+- `client.py` : Interactive demo client for testing the API from the terminal.
 - `dataset.csv` : Dataset for training (downloaded from Kaggle, see below).
-- `demo.py` : Interactive demo client for testing the API from the terminal.
-- `instructions.pdf` : Project instructions.
-- `main.py` : Trains the model (if needed) and starts the Flask API server.
 - `model.pkl` : Saved trained model (auto-generated after training).
 - `requirements.txt` : Python dependencies.
+- `server.py` : Trains the model (if needed) and starts the Flask API server.
+
 
 ## Usage
 
@@ -33,7 +33,7 @@ pip install -r requirements.txt
 ### 3. Run the server
 
 ```bash
-python main.py
+python server.py
 ```
 
 This will train the model (if not already trained) and start the API server at `http://localhost:5000`.
@@ -43,7 +43,7 @@ This will train the model (if not already trained) and start the API server at `
 In a separate terminal:
 
 ```bash
-python demo.py
+python client.py
 ```
 
 This will start an interactive client that allows you to enter text and get predictions from the API.
