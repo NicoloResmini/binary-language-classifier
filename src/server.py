@@ -16,10 +16,11 @@ from sklearn.metrics import accuracy_score, classification_report
 from flask import Flask, request, jsonify
 
 
-# Impostazioni per riproducibilità (opzionale, ma buona pratica)
+# For reproducibility
 torch.manual_seed(42)
 if torch.cuda.is_available():
     torch.cuda.manual_seed_all(42)
+
 
 # ============================================
 # 0. PYTORCH MLP MODEL DEFINITION
@@ -39,7 +40,7 @@ class SimpleMLP(nn.Module):
         x = self.sigmoid(x)
         return x
 
-# Custom Dataset per PyTorch
+# Custom Dataset for PyTorch
 class TextDataset(Dataset):
     def __init__(self, texts, labels, vectorizer_fn):
         self.texts = texts
@@ -55,7 +56,7 @@ class TextDataset(Dataset):
         return text_vector, label
 
 # ============================================
-# 1. BLC CLASS WITH PYTORCH INTEGRATION
+# 1. BLC CLASS
 # ============================================
 
 class BLC:
@@ -67,7 +68,7 @@ class BLC:
         self.idx_to_ngram = {}
 
         # PyTorch model parameters
-        self.model = None # Sarà istanziato in train o load
+        self.model = None
         self.hidden_size = hidden_size
         self.learning_rate = learning_rate
         self.epochs = epochs
@@ -78,10 +79,8 @@ class BLC:
 
 
     def _generate_char_ngrams(self, text):
-        """Genera N-grammi di caratteri da un testo."""
+        """Generate character N-grams from a text."""
         ngrams = set()
-        # Aggiungiamo spazi per catturare n-grammi all'inizio/fine delle parole se si desidera
-        # text = " " + text + " " # Opzionale, dipende dalla strategia
         for n in range(self.ngram_range[0], self.ngram_range[1] + 1):
             for i in range(len(text) - n + 1):
                 ngrams.add(text[i:i+n])
@@ -89,7 +88,7 @@ class BLC:
 
 
     def _build_vocabulary(self, texts):
-        """Costruisce il vocabolario dagli N-grammi dei testi di training."""
+        """Builds the vocabulary from the character N-grams of the training texts."""
         print("Building vocabulary...")
         all_ngrams = Counter()
         for text in texts:
@@ -103,17 +102,17 @@ class BLC:
 
 
     def _vectorize_text(self, text):
-        """Converte un testo in un vettore binario basato sul vocabolario."""
+        """Converts a text into a binary vector based on the vocabulary."""
         ngrams = self._generate_char_ngrams(text)
         vector = torch.zeros(len(self.vocab), dtype=torch.float32)
         for ngram in ngrams:
             if ngram in self.vocab:
-                vector[self.vocab[ngram]] = 1 # Presenza binaria
-        return vector.unsqueeze(0) # Aggiunge dimensione batch (1, vocab_size)
+                vector[self.vocab[ngram]] = 1
+        return vector.unsqueeze(0) # Adds batch dimension (1, vocab_size)
 
 
     def _vectorize_text_for_dataset(self, text):
-        """Versione per DataLoader che non aggiunge dimensione batch."""
+        """Version for DataLoader that does not add batch dimension."""
         ngrams = self._generate_char_ngrams(text)
         vector = torch.zeros(len(self.vocab), dtype=torch.float32)
         for ngram in ngrams:
@@ -123,22 +122,22 @@ class BLC:
 
 
     def preprocess_text(self, text):
-        """Pulisce e pre-processa il testo."""
-        # Trasforma in minuscolo
+        """Cleans and preprocesses the text."""
+        # Convert to lowercase
         text = text.lower()
-        # Rimuovi punteggiatura standard ma mantieni caratteri Unicode (es. lettere accentate)
+        # Remove standard punctuation but keep Unicode characters (e.g. accented letters)
         text = re.sub(r'[{}]'.format(re.escape(string.punctuation)), ' ', text)
-        # Rimuovi numeri
+        # Remove numbers
         text = re.sub(r'\d+', '', text)
-        # Trasforma spazi multipli consecutivi in un singolo spazio
+        # Convert multiple consecutive spaces into a single space
         text = re.sub(r'\s+', ' ', text)
-        # Rimuovi eventuali spazi all'inizio e alla fine del testo
+        # Remove any spaces at the beginning and end of the text
         text = text.strip()
         return text
 
 
     def load_and_prepare_data(self, csv_path):
-        """Carica il dataset e prepara i dati per la classificazione binaria."""
+        """Loads the dataset and prepares the data for binary classification."""
         print("Loading dataset...")
         df = pd.read_csv(csv_path)
 
@@ -149,7 +148,6 @@ class BLC:
         df['text_clean'] = df['Text'].apply(self.preprocess_text)
         df['is_italian'] = (df['Language'] == 'Italian').astype(int)
 
-        # Bilanciamento del dataset come nella tua implementazione originale
         italian_samples = df[df['is_italian'] == 1]
         non_italian_samples = df[df['is_italian'] == 0]
 
@@ -157,7 +155,7 @@ class BLC:
         min_samples = len(italian_samples)
         balanced_df = pd.concat([
             italian_samples.sample(n=min_samples, random_state=42),
-            non_italian_samples.sample(n=min_samples*2, random_state=42) # ratio 1:2 
+            non_italian_samples.sample(n=min_samples*2, random_state=42) # now ratio is 1:2 
         ])
         
         if balanced_df.empty:
@@ -170,7 +168,7 @@ class BLC:
 
 
     def train(self, csv_path):
-        """Addestra il classificatore PyTorch."""
+        """Trains the PyTorch classifier."""
         df = self.load_and_prepare_data(csv_path)
 
         X = df['text_clean'].tolist()
@@ -180,15 +178,15 @@ class BLC:
             X, y, test_size=0.2, random_state=42, stratify=y
         )
 
-        self._build_vocabulary(X_train_texts) # Costruisce il vocabolario solo sui dati di training
+        self._build_vocabulary(X_train_texts) # Builds the vocabulary only on the training data
 
-        # Crea istanza del modello
+        # Create model instance
         input_size = len(self.vocab)
         if input_size == 0:
             raise ValueError("Vocabulary is empty. Check text preprocessing and data.")
         self.model = SimpleMLP(input_size, self.hidden_size, 1).to(self.device)
 
-        # Loss e optimizer
+        # Loss and optimizer
         criterion = nn.BCELoss() # Binary Cross Entropy
         optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
 
@@ -196,8 +194,9 @@ class BLC:
         train_dataset = TextDataset(X_train_texts, y_train, self._vectorize_text_for_dataset)
         train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
 
+        # Training loop
         print("Training classifier...")
-        self.model.train() # Mette il modello in modalità training
+        self.model.train()
         for epoch in range(self.epochs):
             epoch_loss = 0
             for batch_texts_vec, batch_labels in train_loader:
@@ -212,19 +211,20 @@ class BLC:
                 epoch_loss += loss.item()
             print(f"Epoch {epoch+1}/{self.epochs}, Loss: {epoch_loss/len(train_loader):.4f}")
 
-        # Valutazione
-        self.model.eval() # Mette il modello in modalità valutazione
+        # Evaluate the model on the test set
+        print("Evaluating model performance on test set...")
+        self.model.eval() 
         all_preds = []
         all_true = []
-        with torch.no_grad(): # Disabilita calcolo gradienti per valutazione
+        with torch.no_grad(): 
             for text, label in zip(X_test_texts, y_test):
-                text_vector = self._vectorize_text(text).to(self.device) # _vectorize_text aggiunge batch dim
+                text_vector = self._vectorize_text(text).to(self.device) # _vectorize_text adds the batch dim
                 output = self.model(text_vector)
                 predicted_class = (output.item() > 0.5)
                 all_preds.append(int(predicted_class))
                 all_true.append(label)
 
-        accuracy = accuracy_score(all_true, all_preds)
+        accuracy = accuracy_score(all_true, all_preds) # TODO: change to F1 score?
         print(f"\nModel Performance:")
         print(f"Accuracy: {accuracy:.4f}")
         print("\nClassification Report:")
@@ -235,11 +235,11 @@ class BLC:
 
 
     def predict(self, text):
-        """Predice se il testo è Italiano (1) o no (0)."""
+        """Predicts if the text is Italian (1) or not (0)."""
         if not self.is_trained or not self.model:
             raise ValueError("Model must be trained or loaded first!")
 
-        self.model.eval() # Modalità valutazione
+        self.model.eval()
         clean_text = self.preprocess_text(text)
         text_vector = self._vectorize_text(clean_text).to(self.device)
 
@@ -256,7 +256,7 @@ class BLC:
 
 
     def save_model(self, model_path_prefix='../model/blc_model'):
-        """Salva il modello PyTorch addestrato e il vocabolario."""
+        """Saves the trained PyTorch model and vocabulary."""
         if not self.is_trained:
             raise ValueError("Model must be trained first!")
 
@@ -264,7 +264,7 @@ class BLC:
         vocab_path = f"{model_path_prefix}_vocab.json"
         params_path = f"{model_path_prefix}_params.json"
 
-        # Assicurati che la cartella esista, dato che torch.save non la crea in automatico
+        # Ensure the directory exists, as torch.save does not create it automatically
         os.makedirs(os.path.dirname(model_state_path), exist_ok=True)
 
         torch.save(self.model.state_dict(), model_state_path)
@@ -276,7 +276,7 @@ class BLC:
             'ngram_range': self.ngram_range,
             'max_features': self.max_features,
             'hidden_size': self.hidden_size,
-            'input_size': len(self.vocab) # Salva la dimensione di input usata
+            'input_size': len(self.vocab) 
         }
         with open(params_path, 'w', encoding='utf-8') as f:
             json.dump(model_params, f, indent=4)
@@ -287,7 +287,7 @@ class BLC:
 
 
     def load_model(self, model_path_prefix='../model/blc_model'):
-        """Carica un modello PyTorch e il vocabolario."""
+        """Loads a PyTorch model and vocabulary."""
         model_state_path = f"{model_path_prefix}_state.pth"
         vocab_path = f"{model_path_prefix}_vocab.json"
         params_path = f"{model_path_prefix}_params.json"
@@ -298,14 +298,14 @@ class BLC:
         with open(params_path, 'r', encoding='utf-8') as f:
             model_params = json.load(f)
         
-        self.ngram_range = tuple(model_params['ngram_range']) # json salva tuple come liste
+        self.ngram_range = tuple(model_params['ngram_range'])
         self.max_features = model_params['max_features']
         self.hidden_size = model_params['hidden_size']
         input_size = model_params['input_size']
 
         with open(vocab_path, 'r', encoding='utf-8') as f:
             self.vocab = json.load(f)
-        self.idx_to_ngram = {i: ngram for ngram, i in self.vocab.items()} # Ricostruisci se necessario
+        self.idx_to_ngram = {i: ngram for ngram, i in self.vocab.items()} 
 
         if input_size != len(self.vocab):
              print(f"Warning: Loaded vocabulary size ({len(self.vocab)}) differs from saved input size ({input_size}). Using loaded vocabulary size.")
@@ -316,31 +316,30 @@ class BLC:
 
         self.model = SimpleMLP(input_size, self.hidden_size, 1).to(self.device)
         self.model.load_state_dict(torch.load(model_state_path, map_location=self.device))
-        self.model.eval() # Metti in modalità valutazione dopo il caricamento
+        self.model.eval()
         self.is_trained = True
 
 
 # ============================================
-# 2. FLASK API SERVER (Identico alla tua versione)
+# 2. FLASK API SERVER
 # ============================================
 
-# Global classifier instance
-classifier = BLC() # Istanza con parametri di default per Ngram/MLP
+classifier = BLC()
 app = Flask(__name__)
 
 @app.route('/predict', methods=['POST'])
-def predict_api(): # Rinominato per evitare conflitto con il metodo predict della classe
+def predict_api():
     """API endpoint for prediction"""
     try:
         data = request.get_json()
-        if not data or 'Text' not in data: # Mantenuto 'Text' per compatibilità con demo.py
+        if not data or 'Text' not in data:
             return jsonify({'error': 'Missing Text field in request body'}), 400
         
         text = data['Text']
         if not isinstance(text, str) or len(text.strip()) == 0:
             return jsonify({'error': 'Text must be a non-empty string'}), 400
         
-        result = classifier.predict(text) # Chiama il metodo predict della classe BLC
+        result = classifier.predict(text)
         
         return jsonify({
             'text': text,
@@ -350,9 +349,10 @@ def predict_api(): # Rinominato per evitare conflitto con il metodo predict dell
         })
         
     except Exception as e:
-        print(f"Error in /predict endpoint: {e}") # Log dell'errore lato server
+        print(f"Error in /predict endpoint: {e}")
         return jsonify({'error': f'Prediction error: {str(e)}'}), 500
     
+
 @app.route('/health', methods=['GET'])
 def health():
     """Health check endpoint"""
@@ -360,6 +360,7 @@ def health():
         'status': 'healthy',
         'model_trained': classifier.is_trained
     })
+
 
 @app.route('/', methods=['GET'])
 def home():
@@ -369,7 +370,7 @@ def home():
         'usage': {
             'endpoint': '/predict',
             'method': 'POST',
-            'body': {'Text': 'Your text here'}, # Mantenuto 'Text'
+            'body': {'Text': 'Your text here'},
             'response': {
                 'prediction': '1 for Italian, 0 for non-Italian',
                 'is_italian': 'boolean',
@@ -377,6 +378,7 @@ def home():
             }
         }
     })
+
 
 # ============================================
 # 3. MAIN EXECUTION
@@ -386,7 +388,7 @@ def main():
     """Main function to train model and start API server"""
     
     DATASET_PATH = '../dataset/language_detection.csv' 
-    MODEL_PREFIX = '../model/blc_model' # Prefisso per i file del modello PyTorch
+    MODEL_PREFIX = '../model/blc_model'
     
     try:
         print("\nAttempting to load existing PyTorch model...")
@@ -409,7 +411,7 @@ def main():
         except Exception as e:
             print(f"Error training model: {e}")
             import traceback
-            traceback.print_exc() # Stampa traceback completo per debug
+            traceback.print_exc() 
             return
     
     except Exception as e:
