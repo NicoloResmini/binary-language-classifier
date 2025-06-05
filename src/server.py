@@ -224,8 +224,8 @@ class BLC:
                 all_preds.append(int(predicted_class))
                 all_true.append(label)
 
-        accuracy = accuracy_score(all_true, all_preds) # TODO: change to F1 score?
         print(f"\nModel Performance:")
+        accuracy = accuracy_score(all_true, all_preds)
         print(f"Accuracy: {accuracy:.4f}")
         print("\nClassification Report:")
         print(classification_report(all_true, all_preds, target_names=['Non-Italian', 'Italian'], zero_division=0))
