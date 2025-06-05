@@ -37,13 +37,11 @@ class BLC_Demo:
         except requests.exceptions.RequestException as e:
             return None, f"Connection error: {str(e)}"
     
-    def display_result(self, result, text):
+    def display_result(self, result):
         """Display prediction result"""
-        print("\nPREDICTION RESULT:\n")
-        print(f"Input text: '{text}'")
+        print("\nPREDICTION:")
         print(f"Language: {'ITALIAN' if result['is_italian'] else 'NON-ITALIAN'}")
         print(f"Confidence: {result['confidence']:.1%}")
-        print(f"Raw prediction: {result['prediction']} (1=Italian, 0=Non-Italian)")
     
     
     def run_demo(self):
@@ -91,7 +89,7 @@ class BLC_Demo:
                     continue
                 
                 # Display result
-                self.display_result(result, text)
+                self.display_result(result)
                 
                 # Ask if user wants to continue
                 print("\nPress Enter to continue or type 'exit' to quit:")
