@@ -22,35 +22,42 @@ BLC (Binary Language Classifier) is a project to detect whether an input text is
 
 ## Usage
 
+### 0. Pre-requisites:
+- Python 3.9 or higher
+
 ### 1. Clone the repository
 
 ```bash
 git clone https://github.com/NicoloResmini/BLC.git
-cd BLC
 ```
 
 ### 2. Create a virtual environment and install dependencies
 
 ```bash
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+cd BLC
+python -m venv my_venv
+source my_venv/bin/activate  # On Windows (CMD): my_venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
 ### 3. Run the server
 
 ```bash
-python src/server.py
+cd src
+python server.py
 ```
 
 This will train the model (if not already trained) and start the API server at `http://localhost:5000`.
 
 ### 4. Run the client
 
-In a separate terminal:
+In a separate terminal window, activate the virtual environment again and run the client:
 
 ```bash
-python src/client.py
+cd BLC
+source my_venv/bin/activate  # On Windows (CMD): my_venv\Scripts\activate
+cd src
+python client.py
 ```
 
-This will start an interactive client that allows you to enter text and get predictions from the API.
+This will start an interactive client that allows you to enter text and get predictions via API.
