@@ -2,7 +2,7 @@
 
 ## About the Dataset
 
-This is a language detection dataset containing text samples from 17 different languages. The dataset consists of a total of 10,337 samples distributed across various languages with different representation levels.
+This is a Language Detection dataset containing text samples from 17 different languages. The dataset consists of a total of 10,337 samples distributed across various languages with different representation levels.
 
 | Language | Samples | Percentage | Example Text |
 |----------|---------|------------|--------------|
@@ -36,4 +36,4 @@ This is a language detection dataset containing text samples from 17 different l
 - **Italian**: 698 samples (6.75%)
 - **Non-Italian**: 9,639 samples (93.25%)
 
-Since the goal of the BLC project is to perform binary classification to detect whether a text is in Italian or not, the dataset is heavily imbalanced. Therefore, under-sampling of the non-Italian samples is performed to balance the dataset to approximately 1:2 ratio.
+Since the goal of the BLC project is to perform binary classification to detect whether a text is in Italian or not, this dataset was heavily imbalanced. Therefore, under-sampling of the non-Italian samples has been performed to bring the Italian:Non-Italian samples ratio from about 1:14 to 1:2, resulting in a final dataset of 2,094 samples (698 Italian and 1396 Non-Italian).
