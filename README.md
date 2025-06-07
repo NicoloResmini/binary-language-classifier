@@ -22,8 +22,9 @@ BLC (Binary Language Classifier) is a project to detect whether an input text is
 
 ## Usage
 
-### 0. Pre-requisites:
-- Python 3.9 or higher
+### 0. Prerequisites:
+- Python 3.9+
+- Git
 
 ### 1. Clone the repository
 
