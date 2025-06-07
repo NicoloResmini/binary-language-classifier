@@ -13,7 +13,7 @@ BLC (Binary Language Classifier) is a project to detect whether an input text is
     - `blc_classifier_weights.pth` : Weights of the trained classifier.
     - `blc_config.json` : Some config parameters for the model and for the vocabulary.
     - `blc_vocab.json` : Vocabulary data for text vectorization.
-    - `model_info.md` : Information about the model. (TODO ------)
+    - `model_info.md` : Information about the model.
 - `src/` : Contains the source code for the task.
     - `client.py` : Interactive demo client for testing the API from the terminal.
     - `server.py` : Trains the model (if needed) and starts the Flask API server.
