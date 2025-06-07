@@ -2,22 +2,23 @@
 
 ## Introduction
 
-BLC (Binary Language Classifier) is a project to detect whether an input text is in the Italian language or not. It uses a deep learning model trained on a public dataset from [Kaggle](https://www.kaggle.com/datasets/basilb2s/language-detection) to perform binary classification. The solution exposes a local REST API endpoint for inference, allowing the user to send a text and receive a prediction (Italian or non-Italian).
+BLC (Binary Language Classifier) is a machine learning model that performs binary classification to determine whether input text is written in Italian. Trained on a public Kaggle [dataset](https://www.kaggle.com/datasets/basilb2s/language-detection) for language detection, the model serves predictions through a local REST API endpoint, returning either "Italian" or "non-Italian" classifications for submitted text.
+
 
 ## Repository Structure
 
-- `dataset/` : Contains the dataset used for training.
+- `dataset/` : Contains the dataset.
     - `dataset_info.md` : Information about the dataset.
-    - `language_detection.csv` : Dataset downloaded from Kaggle (see below).
-- `model/` : Contains the trained model and the vocabulary for text vectorization.
+    - `language_detection.csv` : Dataset downloaded from Kaggle.
+- `model/` : Contains the model.
     - `blc_classifier_weights.pth` : Weights of the trained classifier.
-    - `blc_config.json` : Some config parameters for the model and for the vocabulary.
+    - `blc_config.json` : Some configuration parameters.
     - `blc_vocab.json` : Vocabulary data for text vectorization.
     - `model_info.md` : Information about the model.
-- `src/` : Contains the source code for the task.
-    - `client.py` : Interactive demo client for testing the API from the terminal.
-    - `server.py` : Trains the model (if needed) and starts the Flask API server.
-- `requirements.txt` : Contains the Python dependencies required for the task.
+- `src/` : Contains the source code.
+    - `client.py` : Interactive client for submitting text and receiving predictions.
+    - `server.py` : Flask server for serving model predictions via API.
+- `requirements.txt` : Contains the required Python dependencies.
 
 
 ## Usage
@@ -48,7 +49,7 @@ cd src
 python server.py
 ```
 
-This will train the model (if not already trained) and start the API server at `http://localhost:5000`.
+This will train the model (if not already stored in 'model') and start the API server at `http://localhost:5000`.
 
 ### 4. Run the client
 
