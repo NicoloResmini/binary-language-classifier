@@ -7,6 +7,7 @@ class BLC_Demo:
         self.predict_endpoint = f"{api_url}/predict"
         self.health_endpoint = f"{api_url}/health"
     
+
     def check_server_status(self):
         """Check if the API server is running"""
         try:
@@ -18,6 +19,7 @@ class BLC_Demo:
         except requests.exceptions.RequestException:
             return False
     
+
     def predict_text(self, text):
         """Send prediction request to API"""
         try:
@@ -37,6 +39,7 @@ class BLC_Demo:
         except requests.exceptions.RequestException as e:
             return None, f"Connection error: {str(e)}"
     
+
     def display_result(self, result):
         """Display prediction result"""
         print("\nPREDICTION:")
@@ -107,6 +110,8 @@ class BLC_Demo:
                 print(f"\nUnexpected error: {e}")
                 print("Please try again or restart the demo.")
 
+
+# Execute the demo
 def main():
     demo = BLC_Demo()
     demo.run_demo()

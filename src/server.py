@@ -15,14 +15,17 @@ from sklearn.metrics import accuracy_score, classification_report
 
 from flask import Flask, request, jsonify
 
+
+# Set random seed for reproducibility
 torch.manual_seed(42)
 
 
 # ============================================
-# 0. PYTORCH MLP MODEL DEFINITION
+# 0. PYTORCH MODEL AND DATASET
 # ============================================
 
 class SimpleMLP(nn.Module):
+    """A simple Multi-Layer Perceptron (MLP) for binary classification."""
     def __init__(self, input_size, hidden_size, output_size):
         super(SimpleMLP, self).__init__()
         self.layer1 = nn.Linear(input_size, hidden_size)
@@ -37,8 +40,9 @@ class SimpleMLP(nn.Module):
         x = self.sigmoid(x)
         return x
 
-# Custom Dataset for PyTorch
+
 class TextDataset(Dataset):
+    """Custom Dataset for text data."""
     def __init__(self, texts, labels, vectorizer_fn):
         self.texts = texts
         self.labels = labels
@@ -54,10 +58,11 @@ class TextDataset(Dataset):
 
 
 # ============================================
-# 1. BLC CLASS
+# 1. BINARY LANGUAGE CLASSIFIER (BLC)
 # ============================================
 
 class BLC:
+    """Binary Language Classifier for Italian language detection."""
     def __init__(self, ngram_range=(2, 4), max_features=10000, hidden_size=128, learning_rate=0.001, epochs=10):
         # N-gram parameters
         self.ngram_range = ngram_range
@@ -65,7 +70,7 @@ class BLC:
         self.vocab = {}
         self.idx_to_ngram = {}
 
-        # PyTorch model parameters
+        # Architecture and training parameters 
         self.model = None
         self.hidden_size = hidden_size
         self.learning_rate = learning_rate
@@ -92,6 +97,7 @@ class BLC:
             ngrams = self._generate_char_ngrams(text)
             all_ngrams.update(ngrams)
 
+        # Keep only the most common N-grams up to max_features
         most_common_ngrams = all_ngrams.most_common(self.max_features)
         self.vocab = {ngram: i for i, (ngram, _) in enumerate(most_common_ngrams)}
         self.idx_to_ngram = {i: ngram for ngram, i in self.vocab.items()}
@@ -157,16 +163,18 @@ class BLC:
 
     def train(self, csv_path):
         """Trains the PyTorch classifier."""
+        # Load and prepare the dataset
         df = self.load_and_prepare_data(csv_path)
-
         X = df['text_clean'].tolist()
         y = df['is_italian'].tolist()
 
+        # Split train/test data into 80% train and 20% test
         X_train_texts, X_test_texts, y_train, y_test = train_test_split(
             X, y, test_size=0.2, random_state=42, stratify=y
         )
 
-        self._build_vocabulary(X_train_texts) # Builds the vocabulary only on the training data
+        # Build the vocabulary only on the training data
+        self._build_vocabulary(X_train_texts)
 
         # Create model instance
         input_size = len(self.vocab)
@@ -175,7 +183,7 @@ class BLC:
         self.model = SimpleMLP(input_size, self.hidden_size, 1).to(self.device)
 
         # Loss and optimizer
-        criterion = nn.BCELoss() # Binary Cross Entropy
+        criterion = nn.BCELoss()
         optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
 
         # DataLoader
@@ -190,7 +198,6 @@ class BLC:
             for batch_texts_vec, batch_labels in train_loader:
                 batch_texts_vec = batch_texts_vec.to(self.device)
                 batch_labels = batch_labels.to(self.device)
-
                 optimizer.zero_grad()
                 outputs = self.model(batch_texts_vec)
                 loss = criterion(outputs, batch_labels)
@@ -211,7 +218,6 @@ class BLC:
                 predicted_class = (output.item() > 0.5)
                 all_preds.append(int(predicted_class))
                 all_true.append(label)
-
         print(f"\nModel Performance:")
         accuracy = accuracy_score(all_true, all_preds)
         print(f"Accuracy: {accuracy:.4f}")
@@ -307,26 +313,31 @@ class BLC:
         self.model.eval()
         self.is_trained = True
 
+# Instantiate the model
+classifier = BLC()
+
 
 # ============================================
 # 2. FLASK API SERVER
 # ============================================
 
-classifier = BLC()
 app = Flask(__name__)
 
 @app.route('/predict', methods=['POST'])
 def predict_api():
     """API endpoint for prediction"""
     try:
+        # Check for valid JSON request
         data = request.get_json()
         if not data or 'Text' not in data:
             return jsonify({'error': 'Missing Text field in request body'}), 400
         
+        # Validate the 'Text' field
         text = data['Text']
         if not isinstance(text, str) or len(text.strip()) == 0:
             return jsonify({'error': 'Text must be a non-empty string'}), 400
         
+        # Perform prediction
         result = classifier.predict(text)
         
         return jsonify({
@@ -354,7 +365,7 @@ def health():
 def home():
     """Home endpoint with usage information"""
     return jsonify({
-        'message': 'Binary Language Classifier API (PyTorch Version)',
+        'message': 'Binary Language Classifier API',
         'usage': {
             'endpoint': '/predict',
             'method': 'POST',
@@ -378,6 +389,7 @@ def main():
     DATASET_PATH = '../dataset/language_detection.csv' 
     MODEL_PREFIX = '../model/blc'
     
+    # Check if the model is already trained (and then load it) or needs to be trained
     try:
         print("\nAttempting to load existing trained model...")
         classifier.load_model(MODEL_PREFIX)
@@ -386,11 +398,13 @@ def main():
     except FileNotFoundError:
         print(f"No existing model found with prefix '{MODEL_PREFIX}'. Training new model...")
         
+        # Check if the dataset file exists
         if not os.path.exists(DATASET_PATH):
             print(f"Error: Dataset file '{DATASET_PATH}' not found!")
             print("Please download the dataset e.g. from https://www.kaggle.com/datasets/basilb2s/language-detection and save it as 'language_detection.csv' in the 'dataset' directory.")
             return
         
+        # Train the model
         try:
             accuracy = classifier.train(DATASET_PATH)
             print(f"Model trained with accuracy: {accuracy:.4f}")
@@ -412,12 +426,12 @@ def main():
         print("Classifier is not trained. Exiting.")
         return
 
+    # Test the classifier with some example sentences
     print("\nTESTING THE CLASSIFIER (after load/train):\n")
     test_sentences = [
         "Questa è una frase in italiano!",
         "This is an English sentence."
     ]
-    
     for text in test_sentences:
         try:
             result = classifier.predict(text)
@@ -427,6 +441,7 @@ def main():
         except Exception as e:
             print(f"Error predicting for text '{text}': {e}")
 
+    # Start the Flask API server
     print("\nSTARTING API SERVER...\n")
     print("Server is running at http://localhost:5000")
     print("Prediction endpoint: http://localhost:5000/predict (POST with JSON {'Text': 'your text'})")
@@ -434,6 +449,7 @@ def main():
     print("\nPress Ctrl+C to stop the server")
     
     app.run(host='0.0.0.0', port=5000, debug=False)
+
 
 if __name__ == '__main__':
     main()
