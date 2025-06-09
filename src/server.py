@@ -379,9 +379,9 @@ def main():
     MODEL_PREFIX = '../model/blc'
     
     try:
-        print("\nAttempting to load existing PyTorch model...")
+        print("\nAttempting to load existing trained model...")
         classifier.load_model(MODEL_PREFIX)
-        print("PyTorch Model loaded successfully!")
+        print("Trained model loaded successfully!")
         
     except FileNotFoundError:
         print(f"No existing model found with prefix '{MODEL_PREFIX}'. Training new model...")
@@ -427,7 +427,7 @@ def main():
         except Exception as e:
             print(f"Error predicting for text '{text}': {e}")
 
-    print("\nSTARTING API SERVER (PyTorch Version)...\n")
+    print("\nSTARTING API SERVER...\n")
     print("Server is running at http://localhost:5000")
     print("Prediction endpoint: http://localhost:5000/predict (POST with JSON {'Text': 'your text'})")
     print("Health check endpoint: http://localhost:5000/health (GET)")

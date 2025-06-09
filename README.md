@@ -46,4 +46,4 @@ cd src
 python client.py
 ```
 
-This will start an interactive client that allows you to enter text and get predictions via API.
+This will start an interactive demo that allows the user to enter text and get predictions via API.
